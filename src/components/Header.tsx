@@ -1,10 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { BrainCircuit, Flame, House, LayoutDashboard, Menu, Rocket, Trophy, X, Zap } from "lucide-react";
+import { Flame, House, LayoutDashboard, Menu, Rocket, Trophy, X, Zap } from "lucide-react";
 import { useProgress } from "./ProgressProvider";
 import { rankFor } from "@/lib/gamification";
 
@@ -29,12 +30,25 @@ export default function Header() {
     <header className="sticky top-0 z-50 border-b-2 border-ink bg-paper/95 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link href="/" className="group flex items-center gap-2.5" aria-label="NEURO//HIGH home">
-          <span className="grid size-9 place-items-center rounded-xl border-2 border-ink bg-vio shadow-[2.5px_2.5px_0_#171321] transition-transform group-hover:-rotate-6">
-            <BrainCircuit className="size-5 text-white" strokeWidth={2.4} />
-          </span>
-          <span className="font-display text-lg font-extrabold tracking-tight text-ink">
-            NEURO<span className="text-vio">//</span>HIGH
-          </span>
+          <Image
+            src="/logo-icon.png"
+            alt=""
+            aria-hidden="true"
+            width={36}
+            height={36}
+            priority
+            unoptimized
+            className="size-9 shrink-0 object-contain transition-transform group-hover:-rotate-6"
+          />
+          <Image
+            src="/logo-name.png"
+            alt="NEURO//HIGH"
+            width={168}
+            height={26}
+            priority
+            unoptimized
+            className="h-[22px] w-auto shrink-0 object-contain"
+          />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">

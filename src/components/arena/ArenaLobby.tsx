@@ -8,7 +8,16 @@ import RankIcon from "@/components/RankIcon";
 import { useProgress } from "@/components/ProgressProvider";
 import { RANKS } from "@/lib/gamification";
 import { buildLeaderboard } from "@/lib/leaderboard";
-import { BATTLE_XP_MAX, BATTLE_XP_MIN, battleXp, emptyArenaStats, findOpponents, poolSize, questionClock, type Opponent } from "@/lib/arena";
+import {
+  BATTLE_XP_MAX,
+  BATTLE_XP_MIN,
+  battleXp,
+  emptyArenaStats,
+  findOpponents,
+  poolSize,
+  questionClock,
+  type Opponent,
+} from "@/lib/arena";
 import BattleScreen from "./BattleScreen";
 
 const LABEL_COLOR = { easier: "#C6F32E", even: "#FFD645", harder: "#FF6B4A" } as const;
@@ -24,7 +33,14 @@ export default function ArenaLobby() {
   const completed = useMemo(() => Object.keys(state?.completed ?? {}), [state?.completed]);
 
   const board = useMemo(
-    () => (state ? buildLeaderboard(state.leaderboardSeed ?? 1, { name: state.learner.codename, xp, badges: state.badges.length }, state.botXpDeltas) : []),
+    () =>
+      state
+        ? buildLeaderboard(
+            state.leaderboardSeed ?? 1,
+            { name: state.learner.codename, xp, badges: state.badges.length },
+            state.botXpDeltas,
+          )
+        : [],
     [state, xp],
   );
 
@@ -37,7 +53,11 @@ export default function ArenaLobby() {
           key={battleKey}
           opponent={opponent}
           streak={arena.streak}
-          onExit={() => { setOpponent(null); setCands([]); setBattleKey((k) => k + 1); }}
+          onExit={() => {
+            setOpponent(null);
+            setCands([]);
+            setBattleKey((k) => k + 1);
+          }}
         />
       </div>
     );
@@ -65,14 +85,17 @@ export default function ArenaLobby() {
             Win streak <Flame className="-my-0.5 size-9 shrink-0 text-coral" />
           </p>
           <p className="font-display text-4xl font-extrabold text-ink">{arena.streak}</p>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-ink/50">best {arena.bestStreak} · {questionClock(arena.streak)}s shot clock</p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-ink/50">
+            best {arena.bestStreak} · {questionClock(arena.streak)}s shot clock
+          </p>
         </div>
         <div className="sticker flex flex-col justify-between bg-white p-5">
           <p className="flex items-center justify-between font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ink/50">
             Record <Trophy className="-my-0.5 size-9 shrink-0 text-sun" />
           </p>
           <p className="font-display text-4xl font-extrabold text-ink">
-            {arena.wins}<span className="text-ink/30">–{arena.losses}</span>
+            {arena.wins}
+            <span className="text-ink/30">–{arena.losses}</span>
           </p>
           <p className="font-mono text-[10px] uppercase tracking-wider text-ink/50">wins – losses</p>
         </div>
@@ -81,7 +104,9 @@ export default function ArenaLobby() {
             Your XP <Zap className="-my-0.5 size-9 shrink-0 text-vio" />
           </p>
           <p className="font-display text-4xl font-extrabold text-ink">{xp.toLocaleString()}</p>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-ink/50">battles pay {BATTLE_XP_MIN}–{BATTLE_XP_MAX} XP</p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-ink/50">
+            battles pay {BATTLE_XP_MIN}–{BATTLE_XP_MAX} XP
+          </p>
         </div>
         <div className="sticker flex flex-col justify-between bg-white p-5">
           <p className="flex items-center justify-between font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ink/50">
@@ -89,7 +114,9 @@ export default function ArenaLobby() {
           </p>
           <p className="font-display text-4xl font-extrabold text-ink">{poolSize(completed)}</p>
           <p className="font-mono text-[10px] uppercase tracking-wider text-ink/50">
-            {completed.length === 0 ? "starter set · clear missions to grow it" : `from ${completed.length} cleared mission${completed.length === 1 ? "" : "s"}`}
+            {completed.length === 0
+              ? "starter set · clear missions to grow it"
+              : `from ${completed.length} cleared mission${completed.length === 1 ? "" : "s"}`}
           </p>
         </div>
       </div>
@@ -104,14 +131,23 @@ export default function ArenaLobby() {
             </h2>
           </div>
           <button onClick={search} disabled={loading} className="btn btn-violet !py-2.5 !text-xs">
-            {cands.length ? <><RefreshCw className="size-4" /> Reroll</> : <><Swords className="size-4" /> Search</>}
+            {cands.length ? (
+              <>
+                <RefreshCw className="size-4" /> Reroll
+              </>
+            ) : (
+              <>
+                <Swords className="size-4" /> Search
+              </>
+            )}
           </button>
         </header>
 
         <div className="p-4 sm:p-5">
           {cands.length === 0 ? (
             <p className="text-center text-sm text-ink/55">
-              Opponents are matched near your XP. The longer your streak, the stronger they get — and the more XP they're worth.
+              Opponents are matched near your XP. The longer your streak, the stronger they get — and the more XP
+              they&apos;re worth.
             </p>
           ) : (
             <div className="grid gap-4 md:grid-cols-3">
@@ -161,14 +197,32 @@ export default function ArenaLobby() {
         <section className="sticker-lg bg-white p-5">
           <p className="font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-vio">How a battle works</p>
           <ol className="mt-3 space-y-2 text-sm leading-relaxed text-ink/75">
-            <li><strong className="text-ink">1 · Answer on the clock.</strong> Each turn you get one question. Correct = Charge (harder tier + fast answer = more).</li>
-            <li><strong className="text-ink">2 · Spend Charge.</strong> Pulse Strike, Overclock Blast, Nano Repair, Firewall, Time Jam. Or bank it for a bigger move.</li>
-            <li><strong className="text-ink">3 · Your rival takes their turn.</strong> Higher-ranked players answer more often and hit harder.</li>
-            <li><strong className="text-ink">4 · First to 0 HP loses</strong> (or most HP after 10 rounds). Beating a stronger rival pays more; losing to one costs less.</li>
+            <li>
+              <strong className="text-ink">1 · Answer on the clock.</strong> Each turn you get one question. Correct =
+              Charge (harder tier + fast answer = more).
+            </li>
+            <li>
+              <strong className="text-ink">2 · Spend Charge.</strong> Pulse Strike, Overclock Blast, Nano Repair,
+              Firewall, Time Jam. Or bank it for a bigger move.
+            </li>
+            <li>
+              <strong className="text-ink">3 · Your rival takes their turn.</strong> Higher-ranked players answer more
+              often and hit harder.
+            </li>
+            <li>
+              <strong className="text-ink">4 · First to 0 HP loses</strong> (or most HP after 10 rounds). Beating a
+              stronger rival pays more; losing to one costs less.
+            </li>
           </ol>
           <p className="mt-3 text-xs text-ink/55">
-            Questions only come from missions you've cleared.{" "}
-            <Link href="/dashboard" className="font-bold text-ink underline decoration-lime decoration-2 underline-offset-2">Clear more</Link> to widen the pool.
+            Questions only come from missions you&apos;ve cleared.{" "}
+            <Link
+              href="/dashboard"
+              className="font-bold text-ink underline decoration-lime decoration-2 underline-offset-2"
+            >
+              Clear more
+            </Link>{" "}
+            to widen the pool.
           </p>
         </section>
 
@@ -179,10 +233,16 @@ export default function ArenaLobby() {
           ) : (
             <ul className="mt-3 space-y-1.5">
               {arena.history.slice(0, 8).map((h) => (
-                <li key={h.at} className="flex items-center justify-between rounded-lg border-2 border-ink/15 px-3 py-2 text-sm">
-                  <span className="truncate font-display font-bold text-ink">{h.won ? "W" : "L"} · {h.opponentName}</span>
+                <li
+                  key={h.at}
+                  className="flex items-center justify-between rounded-lg border-2 border-ink/15 px-3 py-2 text-sm"
+                >
+                  <span className="truncate font-display font-bold text-ink">
+                    {h.won ? "W" : "L"} · {h.opponentName}
+                  </span>
                   <span className={`font-mono text-xs font-bold ${h.won ? "text-[#2E7D0F]" : "text-[#B42318]"}`}>
-                    {h.xpDelta > 0 ? "+" : ""}{h.xpDelta} XP
+                    {h.xpDelta > 0 ? "+" : ""}
+                    {h.xpDelta} XP
                   </span>
                 </li>
               ))}

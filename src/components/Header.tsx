@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Flame, House, LayoutDashboard, Menu, Rocket, Trophy, X, Zap } from "lucide-react";
+import { Flame, House, LayoutDashboard, Menu, Rocket, Swords, Trophy, X, Zap } from "lucide-react";
 import { useProgress } from "./ProgressProvider";
 import { rankFor } from "@/lib/gamification";
 
@@ -13,6 +13,7 @@ const LINKS = [
   { href: "/", label: "Home", icon: House },
   { href: "/#modules", label: "Modules", icon: Rocket },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/arena", label: "Arena", icon: Swords },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
 ];
 

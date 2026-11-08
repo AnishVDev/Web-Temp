@@ -31,7 +31,7 @@ export default function Header() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link href="/" className="group flex items-center gap-2.5" aria-label="NEURO//HIGH home">
           <Image
-            src="/logo-icon.png"
+            src="/img/logo-icon.png"
             alt=""
             aria-hidden="true"
             width={36}
@@ -41,7 +41,7 @@ export default function Header() {
             className="size-9 shrink-0 object-contain transition-transform group-hover:-rotate-6"
           />
           <Image
-            src="/logo-name.png"
+            src="/img/logo-name.png"
             alt="NEURO//HIGH"
             width={168}
             height={26}

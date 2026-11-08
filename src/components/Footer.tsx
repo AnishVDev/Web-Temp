@@ -1,5 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
-import { BrainCircuit, GraduationCap, ShieldCheck } from "lucide-react";
+import { GraduationCap, ShieldCheck } from "lucide-react";
 import { MODULES } from "@/content";
 
 export default function Footer() {
@@ -8,12 +9,14 @@ export default function Footer() {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="grid size-9 place-items-center rounded-xl border-2 border-paper/80 bg-vio">
-              <BrainCircuit className="size-5 text-white" strokeWidth={2.4} />
-            </span>
-            <span className="font-display text-lg font-extrabold tracking-tight">
-              NEURO<span className="text-blush">//</span>HIGH
-            </span>
+            <Image
+              src="/logo-lockup-light.png"
+              alt="NEURO//HIGH"
+              width={210}
+              height={36}
+              unoptimized
+              className="h-9 w-auto object-contain"
+            />
           </div>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-paper/70">
             An AI literacy portal built for grades 9–12. Demystify the machine, master the

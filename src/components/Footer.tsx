@@ -10,7 +10,7 @@ export default function Footer() {
         <div>
           <div className="flex items-center gap-2.5">
             <Image
-              src="/logo-lockup-light.png"
+              src="/img/logo-lockup-light.png"
               alt="NEURO//HIGH"
               width={210}
               height={36}

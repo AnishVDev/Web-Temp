@@ -242,12 +242,15 @@ function botsFor(seed: number): Bot[] {
 
 // ─── Public helpers ──────────────────────────────────────────────────────────
 
-/** Full 500-entry board, sorted, with the learner inserted by XP (ties go to the learner). */
 /** Full 500-entry board, sorted, with the learner inserted by XP (ties go to the learner).
- *  `deltas` are XP changes to simulated players from arena battles. */
-export function buildLeaderboard(seed: number, you: { name: string; xp: number; badges: number }, deltas: Record<string, number> = {}): LeaderboardEntry[] {
+ *  `deltas` are XP changes applied to simulated players from arena battles. */
+export function buildLeaderboard(
+  seed: number,
+  you: { name: string; xp: number; badges: number },
+  deltas: Record<string, number> = {},
+): LeaderboardEntry[] {
   let bots = botsFor(seed);
-  if (Object.keys(deltas).length) {
+  if (deltas && Object.keys(deltas).length > 0) {
     bots = bots
       .map((b) => (deltas[b.id] ? { ...b, xp: Math.max(0, b.xp + deltas[b.id]) } : b))
       .sort((a, b) => b.xp - a.xp || a.name.localeCompare(b.name));

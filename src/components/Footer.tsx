@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <Image
-            src="/png/lockup.png"
+            src="/img/logo-lockup-light.png"
             alt="NEURO//HIGH"
             width={210}
             height={36}

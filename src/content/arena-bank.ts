@@ -3,7 +3,7 @@ import type { ModuleSlug } from "./types";
 export type ArenaQuestion = {
   id: string;
   module: ModuleSlug;
-  /** lesson slug — questions are only served once this lesson is cleared */
+  /** lesson slug — questions are only served once this lesson is cleared (with starter fallback) */
   lesson: string;
   /** 1 = recall · 2 = apply · 3 = analyze */
   tier: 1 | 2 | 3;

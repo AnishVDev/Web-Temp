@@ -5,15 +5,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Flame, House, LayoutDashboard, Menu, Rocket, Swords, Trophy, X, Zap } from "lucide-react";
+import { Flame, House, LayoutDashboard, Menu, Rocket, Trophy, X, Zap } from "lucide-react";
 import { useProgress } from "./ProgressProvider";
 import { rankFor } from "@/lib/gamification";
+import ArenaButton from "./ArenaButton";
+import SettingsMenu from "./SettingsMenu";
 
 const LINKS = [
   { href: "/", label: "Home", icon: House },
   { href: "/#modules", label: "Modules", icon: Rocket },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/arena", label: "Arena", icon: Swords },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
 ];
 
@@ -54,7 +55,8 @@ export default function Header() {
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
           {LINKS.map((l) => {
-            const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href.replace("/#modules", "/learn"));
+            const active =
+              l.href === "/" ? pathname === "/" : pathname.startsWith(l.href.replace("/#modules", "/learn"));
             return (
               <Link
                 key={l.label}
@@ -69,11 +71,11 @@ export default function Header() {
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:gap-3">
           {state && (
             <Link
               href="/dashboard"
-              className="chip hidden bg-sun !py-1.5 text-ink transition-transform hover:-rotate-2 sm:inline-flex"
+              className="chip hidden bg-sun !py-1.5 text-ink transition-transform hover:-rotate-2 lg:inline-flex"
               title={`Rank: ${rank.name}`}
             >
               <Zap className="size-3.5" strokeWidth={2.6} />
@@ -86,6 +88,10 @@ export default function Header() {
               )}
             </Link>
           )}
+
+          <ArenaButton />
+          <SettingsMenu />
+
           <button
             className="btn btn-ghost !px-3 md:hidden"
             onClick={() => setOpen((v) => !v)}

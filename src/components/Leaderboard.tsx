@@ -45,10 +45,11 @@ function useBoard() {
   const name = state?.learner.codename ?? "You";
   const xp = state?.learner.xp ?? 0;
   const badges = state?.badges.length ?? 0;
+  const deltas = state?.botXpDeltas;
 
   const list = useMemo(
-    () => (ready ? buildLeaderboard(seed, { name, xp, badges }) : []),
-    [ready, seed, name, xp, badges],
+    () => (ready ? buildLeaderboard(seed, { name, xp, badges }, deltas) : []),
+    [ready, seed, name, xp, badges, deltas],
   );
   const you = list.find((e) => e.isYou);
 
@@ -243,7 +244,7 @@ export function LeaderboardFull() {
           See where you stand
         </h1>
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink/65">
-          You're ranked against {LEADERBOARD_SIZE - 1} players. Your position updates as you earn XP,
+          You&apos;re ranked against {LEADERBOARD_SIZE - 1} players. Your position updates as you earn XP,
           and reseting will restart your ranking. You can change your name on
           your{" "}
           <Link href="/dashboard" className="font-bold text-ink underline decoration-lime decoration-2 underline-offset-2">

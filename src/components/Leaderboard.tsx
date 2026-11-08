@@ -46,11 +46,12 @@ function useBoard() {
   const xp = state?.learner.xp ?? 0;
   const badges = state?.badges.length ?? 0;
 
+  const deltas = state?.botXpDeltas;
+
   const list = useMemo(
-    () => (ready ? buildLeaderboard(seed, { name, xp, badges }) : []),
-    [ready, seed, name, xp, badges],
+    () => (ready ? buildLeaderboard(seed, { name, xp, badges }, deltas) : []),
+    [ready, seed, name, xp, badges, deltas],
   );
-  const you = list.find((e) => e.isYou);
 
   return { list, you, ready };
 }

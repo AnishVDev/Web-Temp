@@ -5,6 +5,7 @@ import "./globals.css";
 import ProgressProvider from "@/components/ProgressProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { THEME_INIT_SCRIPT } from "@/lib/settings";
 
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -39,6 +40,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <body className="grain dotgrid antialiased">
+        {/* Applies saved dark mode / reduced motion before first paint */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <ProgressProvider>
           <div className="flex min-h-screen flex-col">
             <Header />

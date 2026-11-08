@@ -7,7 +7,21 @@ import { ArrowRight, Clock3, Flame, Heart, Shield, Swords, Zap, ZapOff } from "l
 import RankIcon from "@/components/RankIcon";
 import { useProgress } from "@/components/ProgressProvider";
 import { RANKS, rankFor } from "@/lib/gamification";
-import { ITEMS, ITEM_DAMAGE, MAX_HP, MAX_ROUNDS, SHOP_SECONDS, battleXp, botChoose, drawQuestions, itemById, opponentDelta, questionClock, type ItemId, type Opponent } from "@/lib/arena";
+import {
+  ITEMS,
+  ITEM_DAMAGE,
+  MAX_HP,
+  MAX_ROUNDS,
+  SHOP_SECONDS,
+  battleXp,
+  botChoose,
+  drawQuestions,
+  itemById,
+  opponentDelta,
+  questionClock,
+  type ItemId,
+  type Opponent,
+} from "@/lib/arena";
 
 type Side = { hp: number; charge: number; shield: boolean; jammed: boolean; correct: number };
 type Phase = "intro" | "question" | "reveal" | "shop" | "enemy" | "over";
@@ -21,23 +35,24 @@ type Battle = {
   log: string[];
 };
 
-const side = (): Side => ({ hp: MAX_HP, charge: 0, shield: false, jammed: false, correct: 0 });
+const newSide = (): Side => ({ hp: MAX_HP, charge: 0, shield: false, jammed: false, correct: 0 });
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const push = (log: string[], line: string) => [...log.slice(-5), line];
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
-/** Apply an item from `from` onto the state. Returns new sides + log line. */
 function applyItem(id: ItemId, me: Side, them: Side, meName: string, themName: string) {
   const item = itemById(id);
-  const m = { ...me, charge: me.charge - item.cost };
-  const t = { ...them };
+  const m: Side = { ...me, charge: me.charge - item.cost };
+  const t: Side = { ...them };
   let line = `${meName} used ${item.name}!`;
   if (id === "strike" || id === "blast") {
+    const dmg = ITEM_DAMAGE[id];
     if (t.shield) {
       t.shield = false;
       line += ` ${themName}'s Firewall absorbed it.`;
     } else {
-      t.hp = Math.max(0, t.hp - ITEM_DAMAGE[id]);
-      line += ` −${ITEM_DAMAGE[id]} HP to ${themName}.`;
+      t.hp = Math.max(0, t.hp - dmg);
+      line += ` −${dmg} HP to ${themName}.`;
     }
   } else if (id === "repair") {
     const healed = Math.min(20, MAX_HP - m.hp);
@@ -68,8 +83,20 @@ function HpBar({ hp, color }: { hp: number; color: string }) {
 }
 
 function Fighter({
-  name, xp, s, color, align, isYou,
-}: { name: string; xp: number; s: Side; color: string; align: "left" | "right"; isYou?: boolean }) {
+  name,
+  xp,
+  s,
+  color,
+  align,
+  isYou,
+}: {
+  name: string;
+  xp: number;
+  s: Side;
+  color: string;
+  align: "left" | "right";
+  isYou?: boolean;
+}) {
   const rank = rankFor(xp);
   return (
     <div className={`sticker w-full max-w-xs bg-paper p-3 ${align === "right" ? "ml-auto" : ""}`}>
@@ -91,15 +118,23 @@ function Fighter({
       </div>
       <div className="mt-2 flex items-center gap-2">
         <HpBar hp={s.hp} color={color} />
-        <span className="w-14 shrink-0 text-right font-mono text-[10px] font-bold text-ink">{s.hp}/{MAX_HP}</span>
+        <span className="w-14 shrink-0 text-right font-mono text-[10px] font-bold text-ink">
+          {s.hp}/{MAX_HP}
+        </span>
       </div>
     </div>
   );
 }
 
 export default function BattleScreen({
-  opponent, streak, onExit,
-}: { opponent: Opponent; streak: number; onExit: () => void }) {
+  opponent,
+  streak,
+  onExit,
+}: {
+  opponent: Opponent;
+  streak: number;
+  onExit: () => void;
+}) {
   const { state, recordBattle } = useProgress();
   const you = state?.learner.codename ?? "You";
   const yourXp = state?.learner.xp ?? 0;
@@ -109,13 +144,21 @@ export default function BattleScreen({
   const clock = questionClock(streak);
 
   const [b, setB] = useState<Battle>({
-    phase: "intro", round: 1, you: side(), opp: side(), qi: 0, picked: null,
+    phase: "intro",
+    round: 1,
+    you: newSide(),
+    opp: newSide(),
+    qi: 0,
+    picked: null,
     log: [`${opponent.name} challenges you! Answer fast to build Charge.`],
   });
   const [t, setT] = useState(clock);
   const [result, setResult] = useState<{ won: boolean; xp: number } | null>(null);
+
   const bRef = useRef(b);
   bRef.current = b;
+  const tRef = useRef(t);
+  tRef.current = t;
   const overRef = useRef(false);
 
   const q = questions[b.qi % questions.length];
@@ -125,15 +168,37 @@ export default function BattleScreen({
     (cur: Battle) => {
       if (overRef.current) return;
       overRef.current = true;
-      const won = cur.opp.hp <= 0 || (cur.you.hp > 0 && (cur.you.hp > cur.opp.hp || (cur.you.hp === cur.opp.hp && cur.you.correct > cur.opp.correct)));
+      const won =
+        cur.opp.hp <= 0 ||
+        (cur.you.hp > 0 && (cur.you.hp > cur.opp.hp || (cur.you.hp === cur.opp.hp && cur.you.correct >= cur.opp.correct)));
       const xp = battleXp(yourXp, opponent, won, cur.you.hp, streak);
       setResult({ won, xp });
-      setB((s) => ({ ...s, phase: "over", log: push(s.log, won ? `${opponent.name} was defeated!` : `${you} was defeated…`) }));
-      recordBattle({ opponentId: opponent.id, opponentName: opponent.name, won, xpDelta: xp, opponentDelta: opponentDelta(xp, won) });
-      if (won) confetti({ particleCount: 140, spread: 80, origin: { y: 0.6 }, colors: ["#7B5CFF", "#C6F32E", "#FFD645", "#FF8BD1"], disableForReducedMotion: true });
+      setB((s) => ({
+        ...s,
+        phase: "over",
+        log: push(s.log, won ? `${opponent.name} was defeated!` : `${you} was defeated…`),
+      }));
+      void recordBattle({
+        opponentId: opponent.id,
+        opponentName: opponent.name,
+        won,
+        xpDelta: xp,
+        opponentDelta: opponentDelta(xp, won),
+      });
+      if (won) {
+        confetti({
+          particleCount: 140,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ["#7B5CFF", "#C6F32E", "#FFD645", "#FF8BD1"],
+          disableForReducedMotion: true,
+        });
+      }
     },
     [opponent, recordBattle, streak, you, yourXp],
   );
+  const finishRef = useRef(finish);
+  finishRef.current = finish;
 
   // KO check
   useEffect(() => {
@@ -142,15 +207,53 @@ export default function BattleScreen({
 
   /* ── intro → first question ──────────────────────────────── */
   useEffect(() => {
+    if (b.phase !== "intro") return;
     const id = setTimeout(() => setB((s) => (s.phase === "intro" ? { ...s, phase: "question" } : s)), 1600);
     return () => clearTimeout(id);
-  }, []);
+  }, [b.phase]);
 
-  /* ── shot clock ───────────────────────────────────────────── */
+  /* ── reveal → shop ───────────────────────────────────────── */
+  useEffect(() => {
+    if (b.phase !== "reveal") return;
+    const id = setTimeout(() => setB((s) => (s.phase === "reveal" ? { ...s, phase: "shop" } : s)), 1400);
+    return () => clearTimeout(id);
+  }, [b.phase]);
+
+  /* ── your answer ──────────────────────────────────────────── */
+  const pick = useCallback(
+    (i: number | null) => {
+      const cur = bRef.current;
+      if (cur.phase !== "question" || overRef.current) return;
+      const currentQ = questions[cur.qi % questions.length];
+      const correct = i !== null && i === currentQ.answer;
+      const fast = tRef.current > clock / 2;
+      const gain = correct ? currentQ.tier + (fast ? 1 : 0) : 0;
+      const line =
+        i === null
+          ? "Time's up! No Charge earned."
+          : correct
+            ? `Correct! +${gain} Charge${fast ? " (speed bonus)" : ""}.`
+            : "Wrong answer. No Charge earned.";
+      setB((s) => ({
+        ...s,
+        phase: "reveal",
+        picked: i,
+        you: { ...s.you, charge: s.you.charge + gain, correct: s.you.correct + (correct ? 1 : 0) },
+        log: push(s.log, line),
+      }));
+    },
+    [clock, questions],
+  );
+  const pickRef = useRef(pick);
+  pickRef.current = pick;
+
   const endTurn = useCallback(() => {
     setB((s) => (s.phase === "shop" ? { ...s, phase: "enemy" } : s));
   }, []);
+  const endTurnRef = useRef(endTurn);
+  endTurnRef.current = endTurn;
 
+  /* ── shot clock ───────────────────────────────────────────── */
   useEffect(() => {
     if (b.phase !== "question" && b.phase !== "shop") return;
     const total = b.phase === "question" ? clock : SHOP_SECONDS;
@@ -161,31 +264,12 @@ export default function BattleScreen({
       setT(left);
       if (left <= 0) {
         clearInterval(id);
-        if (bRef.current.phase === "question") pick(null);
-        else endTurn();
+        if (bRef.current.phase === "question") pickRef.current(null);
+        else if (bRef.current.phase === "shop") endTurnRef.current();
       }
     }, 100);
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [b.phase, b.round]);
-
-  /* ── your answer ──────────────────────────────────────────── */
-  const pick = (i: number | null) => {
-    const cur = bRef.current;
-    if (cur.phase !== "question") return;
-    const correct = i !== null && i === q.answer;
-    const fast = t > clock / 2;
-    const gain = correct ? q.tier + (fast ? 1 : 0) : 0;
-    const line = i === null
-      ? "Time's up! No Charge earned."
-      : correct ? `Correct! +${gain} Charge${fast ? " (speed bonus)" : ""}.` : "Wrong answer. No Charge earned.";
-    setB((s) => ({
-      ...s, phase: "reveal", picked: i,
-      you: { ...s.you, charge: s.you.charge + gain, correct: s.you.correct + (correct ? 1 : 0) },
-      log: push(s.log, line),
-    }));
-    setTimeout(() => setB((s) => (s.phase === "reveal" ? { ...s, phase: "shop" } : s)), 1400);
-  };
+  }, [b.phase, b.round, clock]);
 
   /* ── your shop ────────────────────────────────────────────── */
   const buy = (id: ItemId) => {
@@ -199,11 +283,11 @@ export default function BattleScreen({
   useEffect(() => {
     if (b.phase !== "enemy") return;
     let alive = true;
-    (async () => {
+    void (async () => {
       await sleep(900);
       if (!alive || overRef.current) return;
       const cur = bRef.current;
-      const acc = opponent.accuracy - (cur.opp.jammed ? 0.3 : 0);
+      const acc = clamp(opponent.accuracy - (cur.opp.jammed ? 0.3 : 0), 0.05, 0.97);
       const correct = Math.random() < acc;
       const tier = 1 + Math.floor(Math.random() * 3);
       const gain = correct ? tier + (Math.random() < opponent.speed ? 1 : 0) : 0;
@@ -224,12 +308,13 @@ export default function BattleScreen({
       await sleep(900);
       if (!alive || overRef.current) return;
       const s = bRef.current;
-      if (s.round >= MAX_ROUNDS) finish(s);
+      if (s.you.hp <= 0 || s.opp.hp <= 0 || s.round >= MAX_ROUNDS) finishRef.current(s);
       else setB((st) => ({ ...st, phase: "question", round: st.round + 1, qi: st.qi + 1, picked: null }));
     })();
-    return () => { alive = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [b.phase]);
+    return () => {
+      alive = false;
+    };
+  }, [b.phase, opponent, you]);
 
   /* ── render ───────────────────────────────────────────────── */
   const clockTotal = b.phase === "shop" ? SHOP_SECONDS : clock;
@@ -259,7 +344,9 @@ export default function BattleScreen({
         {/* battle log */}
         <div className="sticker bg-white p-3 font-mono text-[12px] leading-relaxed text-ink">
           {b.log.slice(-3).map((l, i, arr) => (
-            <p key={`${l}-${i}`} className={i === arr.length - 1 ? "font-bold" : "text-ink/45"}>▸ {l}</p>
+            <p key={`${l}-${i}`} className={i === arr.length - 1 ? "font-bold" : "text-ink/45"}>
+              ▸ {l}
+            </p>
           ))}
         </div>
 
@@ -279,16 +366,29 @@ export default function BattleScreen({
 
         <AnimatePresence mode="wait">
           {b.phase === "intro" && (
-            <motion.p key="intro" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="text-center font-display text-2xl font-extrabold text-ink">
+            <motion.p
+              key="intro"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center font-display text-2xl font-extrabold text-ink"
+            >
               {opponent.name} wants to battle!
             </motion.p>
           )}
 
           {(b.phase === "question" || b.phase === "reveal") && (
-            <motion.div key={`q-${b.qi}`} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.16 }}>
+            <motion.div
+              key={`q-${b.qi}`}
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.16 }}
+            >
               <div className="mb-2 flex items-center justify-between">
-                <span className="chip bg-paper text-ink/70">Tier {q.tier} · {q.tier + 1} Charge if fast</span>
+                <span className="chip bg-paper text-ink/70">
+                  Tier {q.tier} · {q.tier + 1} Charge if fast
+                </span>
                 <span className="font-mono text-xs font-bold tabular-nums text-ink/60">{Math.ceil(t)}s</span>
               </div>
               <p className="font-display text-lg font-bold leading-snug text-ink sm:text-xl">{q.q}</p>
@@ -302,8 +402,12 @@ export default function BattleScreen({
                   else if (revealed && isPicked) cls = "border-ink bg-coral/25";
                   else if (revealed) cls = "border-ink/15 opacity-55";
                   return (
-                    <button key={i} onClick={() => pick(i)} disabled={revealed}
-                      className={`flex items-start gap-3 rounded-xl border-2 p-3 text-left text-sm font-medium leading-snug text-ink transition-all ${cls}`}>
+                    <button
+                      key={i}
+                      onClick={() => pick(i)}
+                      disabled={revealed}
+                      className={`flex items-start gap-3 rounded-xl border-2 p-3 text-left text-sm font-medium leading-snug text-ink transition-all ${cls}`}
+                    >
                       <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-md border-2 border-ink bg-paper font-mono text-[11px] font-bold">
                         {String.fromCharCode(65 + i)}
                       </span>
@@ -329,9 +433,15 @@ export default function BattleScreen({
                 {ITEMS.map((it) => {
                   const can = b.you.charge >= it.cost;
                   return (
-                    <button key={it.id} onClick={() => buy(it.id)} disabled={!can}
-                      className={`rounded-xl border-2 border-ink p-3 text-left transition-all ${can ? "hover:-translate-y-0.5 hover:shadow-[3px_3px_0_#171321]" : "opacity-40"}`}
-                      style={{ backgroundColor: it.color }}>
+                    <button
+                      key={it.id}
+                      onClick={() => buy(it.id)}
+                      disabled={!can}
+                      className={`rounded-xl border-2 border-ink p-3 text-left transition-all ${
+                        can ? "hover:-translate-y-0.5 hover:shadow-[3px_3px_0_#171321]" : "opacity-40"
+                      }`}
+                      style={{ backgroundColor: it.color }}
+                    >
                       <p className="font-display text-sm font-extrabold leading-tight text-ink">{it.name}</p>
                       <p className="mt-0.5 text-[11px] leading-snug text-ink/75">{it.desc}</p>
                       <p className="mt-1.5 font-mono text-[10px] font-bold uppercase text-ink">{it.cost} charge</p>
@@ -343,30 +453,44 @@ export default function BattleScreen({
           )}
 
           {b.phase === "enemy" && (
-            <motion.p key="enemy" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="animate-pulse text-center font-mono text-xs font-bold uppercase tracking-[0.25em] text-ink/60">
+            <motion.p
+              key="enemy"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="animate-pulse text-center font-mono text-xs font-bold uppercase tracking-[0.25em] text-ink/60"
+            >
               {opponent.name} is taking their turn…
             </motion.p>
           )}
 
           {b.phase === "over" && result && (
-            <motion.div key="over" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
-              className="sticker-lg bg-ink p-6 text-center text-paper">
+            <motion.div
+              key="over"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="sticker-lg bg-ink p-6 text-center text-paper"
+            >
               <p className="font-mono text-xs font-bold uppercase tracking-[0.3em] text-sun">
                 {result.won ? "Victory" : "Defeat"}
               </p>
               <p className={`mt-2 font-display text-5xl font-extrabold ${result.won ? "text-lime" : "text-coral"}`}>
-                {result.xp > 0 ? "+" : ""}{result.xp} XP
+                {result.xp > 0 ? "+" : ""}
+                {result.xp} XP
               </p>
               <div className="mx-auto mt-4 flex flex-nowrap items-center justify-center gap-4 font-mono text-xs uppercase tracking-wider text-paper/60">
-                <span className="flex items-center gap-1"><Heart className="size-4 text-coral" /> {b.you.hp} HP left</span>
+                <span className="flex items-center gap-1">
+                  <Heart className="size-4 text-coral" /> {b.you.hp} HP left
+                </span>
                 <span>{b.you.correct} correct</span>
                 <span>vs {RANKS[opponent.rankIdx].name}</span>
               </div>
               <p className="mt-3 text-xs text-paper/60">
                 {result.won
                   ? `${opponent.name} drops ${Math.abs(opponentDelta(result.xp, true))} XP on the leaderboard.`
-                  : `${opponent.name} gains ${opponentDelta(result.xp, false)} XP. Losing to ${opponent.label === "harder" ? "a stronger" : opponent.label === "easier" ? "a weaker" : "an even"} opponent cost you ${Math.abs(result.xp)} XP.`}
+                  : `${opponent.name} gains ${opponentDelta(result.xp, false)} XP. Losing to ${
+                      opponent.label === "harder" ? "a stronger" : opponent.label === "easier" ? "a weaker" : "an even"
+                    } opponent cost you ${Math.abs(result.xp)} XP.`}
               </p>
               <button onClick={onExit} className="btn btn-primary mx-auto mt-6">
                 Back to the arena <ArrowRight className="size-4" />

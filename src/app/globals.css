@@ -103,7 +103,8 @@ body {
     font-size: 0.8rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--color-ink);
+    /* fixed dark text so buttons stay readable on lime/sun/coral in both modes */
+    color: #171321;
     cursor: pointer;
     transition: transform 0.12s ease, box-shadow 0.12s ease;
     user-select: none;
@@ -129,7 +130,10 @@ body {
   .btn-violet { background: var(--color-vio); color: #fff; }
   .btn-coral { background: var(--color-coral); }
   .btn-sun { background: var(--color-sun); }
-  .btn-ghost { background: #fff; }
+  .btn-ghost {
+    background: var(--color-white);
+    color: var(--color-ink);
+  }
   .chip {
     display: inline-flex;
     align-items: center;
@@ -151,7 +155,7 @@ body {
     border-radius: 0.4rem;
     padding: 0 0.4rem;
     font-size: 0.75em;
-    background: #fff;
+    background: var(--color-white);
   }
 }
 
@@ -194,4 +198,46 @@ a:focus-visible, summary:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ─── Settings: reduced motion (toggle in the settings panel) ─────── */
+[data-motion="reduced"] *,
+[data-motion="reduced"] *::before,
+[data-motion="reduced"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ─── Settings: dark mode ─────────────────────────────────────────── */
+/* Swapping these tokens re-colors everything that uses them. */
+:root[data-theme="dark"] {
+  --color-paper: #120e1d;
+  --color-cream: #1a1529;
+  --color-ink: #f3eeff;
+  --color-white: #201a31;
+  --shadow-sticker: 4px 4px 0 0 #05030a;
+  --shadow-sticker-lg: 7px 7px 0 0 #05030a;
+  --shadow-sticker-sm: 2.5px 2.5px 0 0 #05030a;
+  color-scheme: dark;
+}
+
+/* Colored surfaces keep dark text, since light text on bright colors is hard to read */
+:root[data-theme="dark"] :is(
+  [class*="bg-sun"],
+  [class*="bg-lime"],
+  [class*="bg-coral"],
+  [class*="bg-aqua"],
+  [class*="bg-blush"]
+) {
+  color: #171321;
+}
+
+:root[data-theme="dark"] .btn-ghost {
+  color: var(--color-ink);
+}
+
+:root[data-theme="dark"] .dotgrid {
+  background-image: radial-gradient(#ffffff14 1.2px, transparent 1.2px);
 }

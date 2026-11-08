@@ -1,18 +1,12 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { Award, BrainCircuit, Cpu, Crown, Flame, HeartHandshake, SearchCheck, Sparkles, Target, Wand2, Wrench, Zap } from "lucide-react";
 import { BADGES, lessonXp, randomCodename, rankFor, type Badge, type Rank } from "@/lib/gamification";
 import { newLeaderboardSeed } from "@/lib/leaderboard";
+import { emptyArenaStats, type ArenaStats, type BattleRecord } from "@/lib/arena";
 import { lessonsOf } from "@/content";
 import type { Lesson } from "@/content/types";
 
@@ -30,6 +24,9 @@ export type LearnerState = {
   badges: string[];
   /** Seeds the simulated leaderboard. A new one is created on every reset. */
   leaderboardSeed?: number;
+  /** XP changes applied to simulated players from arena battles (bot id → delta). */
+  botXpDeltas: Record<string, number>;
+  arena: ArenaStats;
 };
 
 type QuizResult = { correct: number; total: number; maxCombo: number; attempts: number };
@@ -50,6 +47,8 @@ type Ctx = {
   complete: (lesson: Lesson, result: QuizResult, hints?: string[]) => Promise<void>;
   /** Fire badge hints from interactives (no lesson completion). */
   pingBadges: (hints: string[]) => Promise<void>;
+  /** Record the outcome of an arena battle (updates your XP, the bot's XP, and arena stats). */
+  recordBattle: (r: Omit<BattleRecord, "at">) => Promise<void>;
   rename: (codename: string) => Promise<boolean>;
   reset: () => Promise<void>;
 };
@@ -97,6 +96,8 @@ function freshState(): SavedState {
     completed: {},
     badges: [],
     leaderboardSeed: newLeaderboardSeed(),
+    botXpDeltas: {},
+    arena: emptyArenaStats(),
     lastActiveDate: null,
   };
 }
@@ -255,6 +256,39 @@ export default function ProgressProvider({ children }: { children: ReactNode }) 
     [handleAwarded],
   );
 
+  const recordBattle = useCallback(
+    async (r: Omit<BattleRecord, "at">) => {
+      const before = loadSaved();
+      const arena = before.arena ?? emptyArenaStats();
+      const xp = Math.max(0, before.learner.xp + r.xpDelta);
+      const streak = r.won ? arena.streak + 1 : 0;
+      const prevDelta = before.botXpDeltas?.[r.opponentId] ?? 0;
+
+      const next: SavedState = {
+        ...before,
+        learner: { ...before.learner, xp },
+        botXpDeltas: { ...(before.botXpDeltas ?? {}), [r.opponentId]: prevDelta + r.opponentDelta },
+        arena: {
+          wins: arena.wins + (r.won ? 1 : 0),
+          losses: arena.losses + (r.won ? 0 : 1),
+          streak,
+          bestStreak: Math.max(arena.bestStreak, streak),
+          history: [{ ...r, at: new Date().toISOString() }, ...arena.history].slice(0, 12),
+        },
+      };
+      persist(next);
+      setState(next);
+
+      if (r.won) pushToast({ kind: "xp", xp: r.xpDelta, title: `Defeated ${r.opponentName}` });
+      else pushToast({ kind: "info", title: `${r.xpDelta} XP`, text: `Lost to ${r.opponentName}. Streak reset.` });
+
+      const oldRank = rankFor(before.learner.xp);
+      const newRank = rankFor(xp);
+      if (newRank.minXp > oldRank.minXp) window.setTimeout(() => setRankUp(newRank), 900);
+    },
+    [pushToast],
+  );
+
   const rename = useCallback(async (codename: string) => {
     const clean = codename.trim().slice(0, 24);
     if (clean.length < 2) return false;
@@ -276,7 +310,7 @@ export default function ProgressProvider({ children }: { children: ReactNode }) 
 
   return (
     <ProgressCtx.Provider
-      value={{ state, loading, isCompleted, completion, complete, pingBadges, rename, reset }}
+      value={{ state, loading, isCompleted, completion, complete, pingBadges, recordBattle, rename, reset }}
     >
       {children}
 

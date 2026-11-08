@@ -1,8 +1,14 @@
 // ─── Arena engine: matchmaking, XP math, items, bot brain, question drawing ───
 
-import { rankIndex } from "@/lib/gamification";
+import { RANKS, rankIndex } from "@/lib/gamification";
 import type { LeaderboardEntry } from "@/lib/leaderboard";
 import { ARENA_BANK, type ArenaQuestion } from "@/content/arena-bank";
+import {
+  matchProfile,
+  pickMatchQuestions,
+  type MatchKind,
+  type MatchProfile,
+} from "@/lib/arena-difficulty";
 
 export const MAX_HP = 100;
 export const MAX_ROUNDS = 10;
@@ -50,59 +56,144 @@ export type Opponent = {
   accuracy: number;
   /** probability the bot earns the speed bonus (0–1) */
   speed: number;
-  label: "easier" | "even" | "harder";
+  label: MatchKind;
+  profile: MatchProfile;
 };
 
-/** Shot clock shrinks as your win streak grows. */
-export function questionClock(streak: number): number {
-  return Math.max(10, 18 - streak);
+/** Shot clock depends on your current rank, match difficulty, and streak. */
+export function questionClock(streak: number, userRankIdx = 0, kind: MatchKind = "even"): number {
+  return matchProfile(userRankIdx, kind, streak).clock;
 }
 
-function toOpponent(e: LeaderboardEntry, yourXp: number, streak: number): Opponent {
-  const rankIdx = rankIndex(e.xp);
-  const diff = e.xp - yourXp;
+const SPARRING_NAMES: Record<MatchKind, string[]> = {
+  easier: ["ByteScout", "LoopLearner", "TokenBuddy", "DataSprout"],
+  even: ["VectorAce", "PromptCraft", "NodeRunner", "SynthSpark"],
+  harder: ["TensorTitan", "ApexGradient", "DeepLayer", "ZeroShotPro"],
+};
+
+/** Find a valid [minXp, maxXp] range for a given rank index using rankIndex(). */
+function rankXpBounds(targetRank: number): [number, number] {
+  let hi = 100;
+  while (rankIndex(hi) <= targetRank && hi < 1_000_000) hi *= 2;
+
+  let l = 0;
+  let r = hi;
+  while (l < r) {
+    const m = (l + r) >> 1;
+    if (rankIndex(m) >= targetRank) r = m;
+    else l = m + 1;
+  }
+  const minXp = l;
+
+  l = minXp;
+  r = hi;
+  while (l < r) {
+    const m = (l + r) >> 1;
+    if (rankIndex(m) > targetRank) r = m;
+    else l = m + 1;
+  }
+  const maxXp = l > minXp && rankIndex(l) > targetRank ? l - 1 : minXp + 400;
+  return [minXp, maxXp];
+}
+
+function buildOpponent(
+  id: string,
+  name: string,
+  xp: number,
+  rankIdx: number,
+  profile: MatchProfile,
+): Opponent {
   return {
-    id: e.id,
-    name: e.name,
-    xp: e.xp,
+    id,
+    name,
+    xp,
     rankIdx,
-    accuracy: clamp(0.5 + rankIdx * 0.05 + streak * 0.03, 0.5, 0.92),
-    speed: clamp(0.25 + rankIdx * 0.06 + streak * 0.04, 0.25, 0.85),
-    label: diff < -80 ? "easier" : diff > 80 ? "harder" : "even",
+    accuracy: Number(profile.botAccuracy.toFixed(2)),
+    speed: clamp(1 - profile.botAnswerAt, 0.2, 0.85),
+    label: profile.kind,
+    profile,
   };
 }
 
 /**
- * Three opponents near your XP. The target shifts upward with your streak,
- * so a long streak pulls in stronger players.
+ * Always returns up to 3 opponents:
+ *  - easier: 1 rank below you (or lower XP at rank 0)
+ *  - even:   your current rank
+ *  - harder: 1 rank above you (or higher XP at top rank)
  */
 export function findOpponents(board: LeaderboardEntry[], yourXp: number, streak: number): Opponent[] {
-  const target = yourXp + streak * 70;
-  const pool = board
-    .filter((e) => !e.isYou && e.xp > 0)
-    .sort((a, b) => Math.abs(a.xp - target) - Math.abs(b.xp - target))
-    .slice(0, 18)
-    .sort((a, b) => a.xp - b.xp);
-  if (pool.length === 0) return [];
-  const jitter = () => Math.floor(Math.random() * 3) - 1;
-  const at = (f: number) => pool[clamp(Math.round(f * (pool.length - 1)) + jitter(), 0, pool.length - 1)];
-  const picks = [at(0.15), at(0.5), at(0.88)];
-  const seen = new Set<string>();
-  return picks
-    .filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)))
-    .map((p) => toOpponent(p, yourXp, streak));
+  const userRankIdx = rankIndex(yourXp);
+  const topRank = Math.max(0, RANKS.length - 1);
+  const usedIds = new Set<string>();
+  const usedNames = new Set(board.map((e) => e.name));
+  const candidates = board.filter((e) => !e.isYou && e.xp >= 0);
+
+  const pickRandomTop = (list: LeaderboardEntry[], cap = 5) => {
+    const slice = list.slice(0, Math.min(cap, list.length));
+    return slice[Math.floor(Math.random() * slice.length)];
+  };
+
+  return (["easier", "even", "harder"] as const).map((kind) => {
+    const profile = matchProfile(userRankIdx, kind, streak);
+    const targetRank = profile.opponentRankIdx;
+
+    let pool = candidates.filter((e) => !usedIds.has(e.id) && rankIndex(e.xp) === targetRank);
+
+    if (kind === "easier") {
+      if (userRankIdx === 0) {
+        const below = pool.filter((e) => e.xp <= yourXp);
+        if (below.length) pool = below;
+      }
+      // Prefer opponents near the upper/middle of the lower rank (or lowest XP at rank 0)
+      pool.sort((a, b) => (userRankIdx === 0 ? a.xp - b.xp : Math.abs(a.xp - yourXp) - Math.abs(b.xp - yourXp)));
+    } else if (kind === "even") {
+      pool.sort((a, b) => Math.abs(a.xp - yourXp) - Math.abs(b.xp - yourXp));
+    } else {
+      if (userRankIdx === topRank) {
+        const above = pool.filter((e) => e.xp >= yourXp);
+        if (above.length) pool = above;
+      }
+      pool.sort((a, b) => (userRankIdx === topRank ? b.xp - a.xp : Math.abs(a.xp - yourXp) - Math.abs(b.xp - yourXp)));
+    }
+
+    if (pool.length > 0) {
+      const chosen = pickRandomTop(pool);
+      usedIds.add(chosen.id);
+      return buildOpponent(chosen.id, chosen.name, chosen.xp, targetRank, profile);
+    }
+
+    // Fallback sparring bot in the exact target rank if no leaderboard bot sits in that rank
+    const [minXp, maxXp] = rankXpBounds(targetRank);
+    let botXp = Math.round(minXp + (maxXp - minXp) * (0.25 + Math.random() * 0.5));
+    if (kind === "easier" && userRankIdx === 0) {
+      botXp = Math.max(0, Math.min(yourXp, Math.round(yourXp * 0.7)));
+    } else if (kind === "harder" && userRankIdx === topRank) {
+      botXp = Math.max(minXp, yourXp + 80);
+    }
+
+    const names = SPARRING_NAMES[kind].filter((n) => !usedNames.has(n));
+    const name = names.length
+      ? names[Math.floor(Math.random() * names.length)]
+      : `${SPARRING_NAMES[kind][0]}-${Math.floor(10 + Math.random() * 89)}`;
+    usedNames.add(name);
+    const id = `sparring-${kind}-${targetRank}`;
+    usedIds.add(id);
+
+    return buildOpponent(id, name, botXp, targetRank, profile);
+  });
 }
 
 /* ── XP math (win = 50–200, loss = −15 to −60) ──────────────────── */
 
 export function battleXp(yourXp: number, opp: Opponent, won: boolean, yourHp: number, streak: number): number {
+  const profile = opp.profile ?? matchProfile(rankIndex(yourXp), opp.label, streak);
   const diff = opp.xp - yourXp;
   if (won) {
-    const raw = 95 + clamp(diff / 10, -45, 60) + 8 * Math.min(streak, 6) + Math.round(yourHp / 5);
+    const raw = (95 + clamp(diff / 15, -25, 35) + 7 * Math.min(streak, 6) + Math.round(yourHp / 6)) * profile.xpWinMult;
     return clamp(Math.round(raw), BATTLE_XP_MIN, BATTLE_XP_MAX);
   }
-  // Losing to someone stronger costs little; losing to someone weaker costs more.
-  return -clamp(Math.round(40 - diff / 15), 15, 60);
+  const rawLoss = (38 - clamp(diff / 25, -15, 15)) * profile.xpLossMult;
+  return -clamp(Math.round(rawLoss), 15, 60);
 }
 
 /** How much the simulated opponent's XP changes on the leaderboard. */
@@ -138,11 +229,10 @@ export function botChoose(charge: number, hp: number, enemyShielded: boolean, en
 
 /* ── Question drawing ───────────────────────────────────────────── */
 
-/** Share of tier 1 / 2 / 3 questions, by win streak. */
-export function tierWeights(streak: number): [number, number, number] {
-  if (streak <= 1) return [0.6, 0.3, 0.1];
-  if (streak <= 3) return [0.35, 0.45, 0.2];
-  return [0.15, 0.45, 0.4];
+/** Share of tier 1 / 2 / 3 questions, by rank, match difficulty, and streak. */
+export function tierWeights(streak: number, userRankIdx = 0, kind: MatchKind = "even"): [number, number, number] {
+  const w = matchProfile(userRankIdx, kind, streak).tierWeights;
+  return [w[1], w[2], w[3]];
 }
 
 const FALLBACK_LESSONS = ["not-magic", "learning-from-data"];
@@ -161,24 +251,20 @@ function shuffleOptions(q: ArenaQuestion): ArenaQuestion {
   return { ...q, options: idx.map((i) => q.options[i]), answer: idx.indexOf(q.answer) };
 }
 
-/** Draw `n` questions from lessons the learner has cleared, weighted by tier. */
-export function drawQuestions(completedSlugs: string[], streak: number, n: number): ArenaQuestion[] {
+/** Draw `n` questions from lessons the learner has cleared, scaled by rank & match difficulty. */
+export function drawQuestions(
+  completedSlugs: string[],
+  streak: number,
+  n: number,
+  userRankIdx = 0,
+  kind: MatchKind = "even",
+): ArenaQuestion[] {
   const done = new Set(completedSlugs);
   let pool = ARENA_BANK.filter((q) => done.has(q.lesson));
   if (pool.length < 12) pool = ARENA_BANK.filter((q) => FALLBACK_LESSONS.includes(q.lesson));
 
-  const byTier: Record<1 | 2 | 3, ArenaQuestion[]> = { 1: [], 2: [], 3: [] };
-  for (const q of shuffle(pool)) byTier[q.tier].push(q);
-
-  const w = tierWeights(streak);
-  const out: ArenaQuestion[] = [];
-  while (out.length < n && (byTier[1].length || byTier[2].length || byTier[3].length)) {
-    const r = Math.random();
-    let tier: 1 | 2 | 3 = r < w[0] ? 1 : r < w[0] + w[1] ? 2 : 3;
-    if (!byTier[tier].length) tier = ([1, 2, 3] as const).find((t) => byTier[t].length)!;
-    out.push(shuffleOptions(byTier[tier].pop()!));
-  }
-  return out;
+  const profile = matchProfile(userRankIdx, kind, streak);
+  return pickMatchQuestions(pool, profile, n).map(shuffleOptions);
 }
 
 export function poolSize(completedSlugs: string[]): number {

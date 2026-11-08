@@ -71,7 +71,7 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap gap-x-7 gap-y-3">
               {[
                 [`${TOTAL_LESSONS}`, "lessons + 3 module challenges"],
-                [`${MAX_XP.toLocaleString()}`, "maximum XP available"],
+                [`${MAX_XP.toLocaleString()}`, "XP available from lessons"],
                 ["9", "badges to earn"],
                 ["~90", "estimated minutes"],
               ].map(([v, l]) => (

@@ -30,9 +30,10 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b-2 border-ink bg-paper/95 backdrop-blur-sm">
-      {/* full-bleed: no max-w-6xl so right side can hit the viewport edge */}
-      <div className="flex h-[68px] w-full items-center gap-3 px-3 sm:px-5">
-        <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label="NEURO//HIGH home">
+      {/* 3 columns: logo | centered nav | right cluster. The 1fr sides keep the nav in the middle. */}
+      <div className="grid h-[68px] w-full grid-cols-[1fr_auto] items-center gap-3 px-3 sm:px-5 md:grid-cols-[1fr_auto_1fr]">
+        {/* LEFT: logo */}
+        <Link href="/" className="group flex shrink-0 items-center gap-2.5 justify-self-start" aria-label="NEURO//HIGH home">
           <Image
             src="/img/logo-icon.png"
             alt=""
@@ -54,7 +55,8 @@ export default function Header() {
           />
         </Link>
 
-        <nav className="ml-2 hidden items-center gap-1 md:flex" aria-label="Primary">
+        {/* MIDDLE: nav, centered in the grid */}
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
           {LINKS.map((l) => {
             const active =
               l.href === "/" ? pathname === "/" : pathname.startsWith(l.href.replace("/#modules", "/learn"));
@@ -72,26 +74,25 @@ export default function Header() {
           })}
         </nav>
 
-        {/* XP stays where it was - left of the gap */}
-        {state && (
-          <Link
-            href="/dashboard"
-            className="chip hidden shrink-0 bg-sun !px-4 !py-2 !text-xs text-ink transition-transform hover:-rotate-2 sm:inline-flex"
-            title={`Rank: ${rank.name}`}
-          >
-            <Zap className="size-4" strokeWidth={2.8} />
-            {xp.toLocaleString()} XP
-            {state.learner.streak > 1 && (
-              <span className="flex items-center gap-0.5 border-l-2 border-ink/20 pl-1.5">
-                <Flame className="size-4 text-coral" strokeWidth={2.6} />
-                {state.learner.streak}
-              </span>
-            )}
-          </Link>
-        )}
+        {/* RIGHT: XP, Arena, Settings */}
+        <div className="flex shrink-0 items-center gap-2 justify-self-end sm:gap-2.5 md:col-start-3">
+          {state && (
+            <Link
+              href="/dashboard"
+              className="chip hidden shrink-0 bg-sun !px-4 !py-2 !text-xs text-ink transition-transform hover:-rotate-2 sm:inline-flex"
+              title={`Rank: ${rank.name}`}
+            >
+              <Zap className="size-4" strokeWidth={2.8} />
+              {xp.toLocaleString()} XP
+              {state.learner.streak > 1 && (
+                <span className="flex items-center gap-0.5 border-l-2 border-ink/20 pl-1.5">
+                  <Flame className="size-4 text-coral" strokeWidth={2.6} />
+                  {state.learner.streak}
+                </span>
+              )}
+            </Link>
+          )}
 
-        {/* ml-auto = this group eats all the leftover space and pins to very right */}
-        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">
           <Link
             href="/arena"
             aria-current={inArena ? "page" : undefined}
@@ -102,7 +103,6 @@ export default function Header() {
             <Swords className="size-4 shrink-0 transition-transform group-hover:-rotate-12 sm:size-[18px]" strokeWidth={2.6} />
             <span>Arena</span>
             <Swords className="size-4 shrink-0 -scale-x-100 transition-transform group-hover:rotate-12 sm:size-[18px]" strokeWidth={2.6} />
-            {/* fire badge overlapping top-right */}
             <span className="absolute -right-2 -top-2 grid size-6 place-items-center rounded-full border-2 border-ink bg-white shadow-[2px_2px_0_#171321]">
               <Flame className="size-3.5 text-coral" strokeWidth={2.6} fill="currentColor" />
             </span>

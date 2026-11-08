@@ -6,7 +6,8 @@ import confetti from "canvas-confetti";
 import { ArrowRight, Clock3, Flame, Heart, Shield, Swords, Zap, ZapOff } from "lucide-react";
 import RankIcon from "@/components/RankIcon";
 import { useProgress } from "@/components/ProgressProvider";
-import { RANKS, rankFor } from "@/lib/gamification";
+import { RANKS, rankFor, rankIndex } from "@/lib/gamification";
+import { matchProfile, type TierWeights } from "@/lib/arena-difficulty";
 import {
   ITEMS,
   ITEM_DAMAGE,
@@ -18,7 +19,6 @@ import {
   drawQuestions,
   itemById,
   opponentDelta,
-  questionClock,
   type ItemId,
   type Opponent,
 } from "@/lib/arena";
@@ -39,6 +39,13 @@ const newSide = (): Side => ({ hp: MAX_HP, charge: 0, shield: false, jammed: fal
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const push = (log: string[], line: string) => [...log.slice(-5), line];
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+
+function rollTier(w: TierWeights): 1 | 2 | 3 {
+  const r = Math.random();
+  if (r < w[1]) return 1;
+  if (r < w[1] + w[2]) return 2;
+  return 3;
+}
 
 function applyItem(id: ItemId, me: Side, them: Side, meName: string, themName: string) {
   const item = itemById(id);
@@ -140,8 +147,14 @@ export default function BattleScreen({
   const yourXp = state?.learner.xp ?? 0;
   const completed = useMemo(() => Object.keys(state?.completed ?? {}), [state?.completed]);
 
-  const questions = useMemo(() => drawQuestions(completed, streak, MAX_ROUNDS + 4), [completed, streak]);
-  const clock = questionClock(streak);
+  const [profile] = useState(
+    () => opponent.profile ?? matchProfile(rankIndex(yourXp), opponent.label, streak),
+  );
+  const questions = useMemo(
+    () => drawQuestions(completed, streak, MAX_ROUNDS + 4, profile.userRankIdx, opponent.label),
+    [completed, streak, profile.userRankIdx, opponent.label],
+  );
+  const clock = profile.clock;
 
   const [b, setB] = useState<Battle>({
     phase: "intro",
@@ -289,7 +302,7 @@ export default function BattleScreen({
       const cur = bRef.current;
       const acc = clamp(opponent.accuracy - (cur.opp.jammed ? 0.3 : 0), 0.05, 0.97);
       const correct = Math.random() < acc;
-      const tier = 1 + Math.floor(Math.random() * 3);
+      const tier = rollTier(profile.tierWeights);
       const gain = correct ? tier + (Math.random() < opponent.speed ? 1 : 0) : 0;
       setB((s) => ({
         ...s,
@@ -299,6 +312,7 @@ export default function BattleScreen({
       for (let n = 0; n < 2; n++) {
         await sleep(1000);
         if (!alive || overRef.current) return;
+        if (Math.random() >= profile.botItemRate) break;
         const s = bRef.current;
         const choice = botChoose(s.opp.charge, s.opp.hp, s.you.shield, s.you.hp);
         if (!choice) break;
@@ -314,7 +328,7 @@ export default function BattleScreen({
     return () => {
       alive = false;
     };
-  }, [b.phase, opponent, you]);
+  }, [b.phase, opponent, profile, you]);
 
   /* ── render ───────────────────────────────────────────────── */
   const clockTotal = b.phase === "shop" ? SHOP_SECONDS : clock;

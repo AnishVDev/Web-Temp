@@ -6,8 +6,9 @@ import { motion } from "framer-motion";
 import { ArrowRight, Flame, RefreshCw, Shield, Swords, Trophy, Zap } from "lucide-react";
 import RankIcon from "@/components/RankIcon";
 import { useProgress } from "@/components/ProgressProvider";
-import { RANKS } from "@/lib/gamification";
+import { RANKS, rankIndex } from "@/lib/gamification";
 import { buildLeaderboard } from "@/lib/leaderboard";
+import { describeMix, matchProfiles } from "@/lib/arena-difficulty";
 import {
   BATTLE_XP_MAX,
   BATTLE_XP_MIN,
@@ -15,7 +16,6 @@ import {
   emptyArenaStats,
   findOpponents,
   poolSize,
-  questionClock,
   type Opponent,
 } from "@/lib/arena";
 import BattleScreen from "./BattleScreen";
@@ -34,6 +34,8 @@ export default function ArenaLobby() {
 
   const arena = state?.arena ?? emptyArenaStats();
   const xp = state?.learner.xp ?? 0;
+  const userRankIdx = rankIndex(xp);
+  const profiles = useMemo(() => matchProfiles(userRankIdx, arena.streak), [userRankIdx, arena.streak]);
   const completed = useMemo(() => Object.keys(state?.completed ?? {}), [state?.completed]);
   const locked = poolSize(completed) === 0;
 
@@ -68,6 +70,11 @@ export default function ArenaLobby() {
     );
   }
 
+  const clockSummary =
+    profiles.harder.clock === profiles.easier.clock
+      ? `${profiles.even.clock}s per question`
+      : `${profiles.harder.clock}–${profiles.easier.clock}s per question`;
+
   return (
     <div className="mx-auto max-w-6xl px-4 pb-24 pt-10 sm:px-6">
       {/* intro */}
@@ -93,7 +100,7 @@ export default function ArenaLobby() {
           </p>
           <p className="font-display text-4xl font-extrabold text-ink">{arena.streak}</p>
           <p className="font-mono text-[10px] uppercase tracking-wider text-ink/50">
-            Best: {arena.bestStreak} · {questionClock(arena.streak)} seconds per question
+            Best: {arena.bestStreak} · {clockSummary}
           </p>
         </div>
 
@@ -167,8 +174,8 @@ export default function ArenaLobby() {
             </div>
           ) : cands.length === 0 ? (
             <p className="mx-auto max-w-2xl text-center text-sm leading-relaxed text-ink/55">
-              We&apos;ll look for learners with XP close to yours. The longer your win streak, the tougher the
-              matches get, and the bigger the rewards.
+              We&apos;ll pair you with an easier opponent (one rank down), an even match (your rank), and a tougher
+              opponent (one rank up). Question difficulty, timer, and opponent skill scale with your current rank.
             </p>
           ) : (
             <div className="grid gap-4 md:grid-cols-3">
@@ -207,6 +214,9 @@ export default function ArenaLobby() {
                     </div>
 
                     <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-ink/50">
+                      {o.profile.clock}s clock · {describeMix(o.profile.tierWeights)}
+                    </p>
+                    <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wider text-ink/50">
                       Accuracy: {Math.round(o.accuracy * 100)}%
                     </p>
 

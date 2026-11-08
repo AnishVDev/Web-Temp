@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { Award, BrainCircuit, Cpu, Crown, Flame, HeartHandshake, SearchCheck, Sparkles, Target, Wand2, Wrench, Zap } from "lucide-react";
@@ -26,6 +33,7 @@ export type LearnerState = {
   leaderboardSeed?: number;
   /** XP changes applied to simulated players from arena battles (bot id → delta). */
   botXpDeltas: Record<string, number>;
+  /** Arena win/loss/streak record and battle history. */
   arena: ArenaStats;
 };
 
@@ -105,7 +113,17 @@ function freshState(): SavedState {
 function loadSaved(): SavedState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...freshState(), ...JSON.parse(raw) };
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const fresh = freshState();
+      return {
+        ...fresh,
+        ...parsed,
+        learner: { ...fresh.learner, ...(parsed.learner ?? {}) },
+        botXpDeltas: parsed.botXpDeltas ?? {},
+        arena: { ...fresh.arena, ...(parsed.arena ?? {}) },
+      };
+    }
   } catch {
     /* corrupted: start fresh */
   }
@@ -273,14 +291,17 @@ export default function ProgressProvider({ children }: { children: ReactNode }) 
           losses: arena.losses + (r.won ? 0 : 1),
           streak,
           bestStreak: Math.max(arena.bestStreak, streak),
-          history: [{ ...r, at: new Date().toISOString() }, ...arena.history].slice(0, 12),
+          history: [{ ...r, at: new Date().toISOString() }, ...(arena.history ?? [])].slice(0, 12),
         },
       };
       persist(next);
       setState(next);
 
-      if (r.won) pushToast({ kind: "xp", xp: r.xpDelta, title: `Defeated ${r.opponentName}` });
-      else pushToast({ kind: "info", title: `${r.xpDelta} XP`, text: `Lost to ${r.opponentName}. Streak reset.` });
+      if (r.won) {
+        pushToast({ kind: "xp", xp: r.xpDelta, title: `Defeated ${r.opponentName}` });
+      } else {
+        pushToast({ kind: "info", title: `${r.xpDelta} XP`, text: `Lost to ${r.opponentName}. Streak reset.` });
+      }
 
       const oldRank = rankFor(before.learner.xp);
       const newRank = rankFor(xp);

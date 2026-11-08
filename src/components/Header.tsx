@@ -5,10 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Flame, House, LayoutDashboard, Menu, Rocket, Trophy, X, Zap } from "lucide-react";
+import { Flame, House, LayoutDashboard, Menu, Rocket, Swords, Trophy, X, Zap } from "lucide-react";
 import { useProgress } from "./ProgressProvider";
 import { rankFor } from "@/lib/gamification";
-import ArenaButton from "./ArenaButton";
 import SettingsMenu from "./SettingsMenu";
 
 const LINKS = [
@@ -27,11 +26,12 @@ export default function Header() {
 
   const xp = state?.learner.xp ?? 0;
   const rank = rankFor(xp);
+  const inArena = pathname.startsWith("/arena");
 
   return (
     <header className="sticky top-0 z-50 border-b-2 border-ink bg-paper/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
-        {/* logo */}
+      {/* full-bleed: no max-w-6xl so right side can hit the viewport edge */}
+      <div className="flex h-[68px] w-full items-center gap-3 px-3 sm:px-5">
         <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label="NEURO//HIGH home">
           <Image
             src="/img/logo-icon.png"
@@ -50,12 +50,11 @@ export default function Header() {
             height={26}
             priority
             unoptimized
-            className="h-[22px] w-auto shrink-0 object-contain"
+            className="hidden h-[22px] w-auto shrink-0 object-contain min-[420px]:block"
           />
         </Link>
 
-        {/* nav (centered in the space between logo and XP) */}
-        <nav className="hidden flex-1 items-center justify-center gap-1 md:flex" aria-label="Primary">
+        <nav className="ml-2 hidden items-center gap-1 md:flex" aria-label="Primary">
           {LINKS.map((l) => {
             const active =
               l.href === "/" ? pathname === "/" : pathname.startsWith(l.href.replace("/#modules", "/learn"));
@@ -73,30 +72,44 @@ export default function Header() {
           })}
         </nav>
 
-        {/* XP chip (stays right of the nav) */}
-        <div className="hidden flex-1 justify-end lg:flex">
-          {state && (
-            <Link
-              href="/dashboard"
-              className="chip bg-sun !py-1.5 text-ink transition-transform hover:-rotate-2"
-              title={`Rank: ${rank.name}`}
-            >
-              <Zap className="size-3.5" strokeWidth={2.6} />
-              {xp.toLocaleString()} XP
-              {state.learner.streak > 1 && (
-                <span className="flex items-center gap-0.5 border-l-2 border-ink/20 pl-1.5">
-                  <Flame className="size-3.5 text-coral" strokeWidth={2.6} />
-                  {state.learner.streak}
-                </span>
-              )}
-            </Link>
-          )}
-        </div>
+        {/* XP stays where it was - left of the gap */}
+        {state && (
+          <Link
+            href="/dashboard"
+            className="chip hidden shrink-0 bg-sun !px-4 !py-2 !text-xs text-ink transition-transform hover:-rotate-2 sm:inline-flex"
+            title={`Rank: ${rank.name}`}
+          >
+            <Zap className="size-4" strokeWidth={2.8} />
+            {xp.toLocaleString()} XP
+            {state.learner.streak > 1 && (
+              <span className="flex items-center gap-0.5 border-l-2 border-ink/20 pl-1.5">
+                <Flame className="size-4 text-coral" strokeWidth={2.6} />
+                {state.learner.streak}
+              </span>
+            )}
+          </Link>
+        )}
 
-        {/* right group: Arena, Settings, mobile menu */}
-        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3 lg:ml-0">
-          <ArenaButton />
+        {/* ml-auto = this group eats all the leftover space and pins to very right */}
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">
+          <Link
+            href="/arena"
+            aria-current={inArena ? "page" : undefined}
+            className={`group relative inline-flex items-center gap-2 rounded-2xl border-2 border-ink bg-gradient-to-r from-[#FF6B4A] via-[#FF8A3D] to-[#FFD645] px-3.5 py-2 font-mono text-xs font-extrabold uppercase tracking-wider text-[#171321] shadow-[3px_3px_0_#171321,0_0_18px_rgba(255,107,74,0.45)] transition-all hover:-translate-y-0.5 hover:shadow-[5px_5px_0_#171321,0_0_26px_rgba(255,107,74,0.6)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0_#171321] sm:px-4 sm:py-2.5 sm:text-[13px] ${
+              inArena ? "ring-4 ring-ink/20" : ""
+            }`}
+          >
+            <Swords className="size-4 shrink-0 transition-transform group-hover:-rotate-12 sm:size-[18px]" strokeWidth={2.6} />
+            <span>Arena</span>
+            <Swords className="size-4 shrink-0 -scale-x-100 transition-transform group-hover:rotate-12 sm:size-[18px]" strokeWidth={2.6} />
+            {/* fire badge overlapping top-right */}
+            <span className="absolute -right-2 -top-2 grid size-6 place-items-center rounded-full border-2 border-ink bg-white shadow-[2px_2px_0_#171321]">
+              <Flame className="size-3.5 text-coral" strokeWidth={2.6} fill="currentColor" />
+            </span>
+          </Link>
+
           <SettingsMenu />
+
           <button
             className="btn btn-ghost !px-3 md:hidden"
             onClick={() => setOpen((v) => !v)}
@@ -118,6 +131,12 @@ export default function Header() {
             aria-label="Mobile"
           >
             <div className="flex flex-col gap-1 p-3">
+              <Link
+                href="/arena"
+                className="flex items-center gap-2 rounded-lg border-2 border-ink bg-gradient-to-r from-coral to-sun px-3 py-2.5 font-mono text-sm font-bold uppercase tracking-wider text-[#171321] shadow-[3px_3px_0_#171321]"
+              >
+                <Swords className="size-4" /> Arena
+              </Link>
               {LINKS.map((l) => (
                 <Link
                   key={l.label}

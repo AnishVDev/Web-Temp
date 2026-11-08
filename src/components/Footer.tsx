@@ -49,7 +49,7 @@ export default function Footer() {
                     style={{ backgroundColor: m.color }}
                   />
                   <span className="transition-transform group-hover:translate-x-0.5">
-                    {m.codename} — {m.title}
+                    {m.codename} - {m.title}
                   </span>
                 </Link>
               </li>

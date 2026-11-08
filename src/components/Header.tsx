@@ -30,8 +30,9 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b-2 border-ink bg-paper/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/" className="group flex items-center gap-2.5" aria-label="NEURO//HIGH home">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
+        {/* logo */}
+        <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label="NEURO//HIGH home">
           <Image
             src="/img/logo-icon.png"
             alt=""
@@ -53,7 +54,8 @@ export default function Header() {
           />
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
+        {/* nav (centered in the space between logo and XP) */}
+        <nav className="hidden flex-1 items-center justify-center gap-1 md:flex" aria-label="Primary">
           {LINKS.map((l) => {
             const active =
               l.href === "/" ? pathname === "/" : pathname.startsWith(l.href.replace("/#modules", "/learn"));
@@ -71,11 +73,12 @@ export default function Header() {
           })}
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        {/* XP chip (stays right of the nav) */}
+        <div className="hidden flex-1 justify-end lg:flex">
           {state && (
             <Link
               href="/dashboard"
-              className="chip hidden bg-sun !py-1.5 text-ink transition-transform hover:-rotate-2 lg:inline-flex"
+              className="chip bg-sun !py-1.5 text-ink transition-transform hover:-rotate-2"
               title={`Rank: ${rank.name}`}
             >
               <Zap className="size-3.5" strokeWidth={2.6} />
@@ -88,10 +91,12 @@ export default function Header() {
               )}
             </Link>
           )}
+        </div>
 
+        {/* right group: Arena, Settings, mobile menu */}
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3 lg:ml-0">
           <ArenaButton />
           <SettingsMenu />
-
           <button
             className="btn btn-ghost !px-3 md:hidden"
             onClick={() => setOpen((v) => !v)}

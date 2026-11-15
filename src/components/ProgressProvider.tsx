@@ -432,7 +432,7 @@ export default function ProgressProvider({ children }: { children: ReactNode }) 
                 <Cpu className="size-4" aria-hidden /> Systems upgraded
               </button>
               <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-ink/40">
-                keep climbing — singularity awaits
+                keep climbing, singularity awaits
               </p>
             </motion.div>
           </motion.div>

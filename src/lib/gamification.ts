@@ -19,14 +19,14 @@ export type Rank = {
 export const USE_RANK_IMAGES = false;
 
 export const RANKS: Rank[] = [
-  { name: "Bootloader", minXp: 0, tagline: "System online. Welcome aboard.", color: "#EEE8FF", iconColor: "#171321", image: "/images/ranks/bootloader.png" },
-  { name: "Cipher", minXp: 150, tagline: "You speak a little machine now.", color: "#43D9FF", iconColor: "#171321", image: "/images/ranks/cipher.png" },
-  { name: "Operator", minXp: 420, tagline: "Buttons pressed with intent.", color: "#C6F32E", iconColor: "#171321", image: "/images/ranks/operator.png" },
-  { name: "Promptsmith", minXp: 760, tagline: "Words bend to your will.", color: "#FFD645", iconColor: "#171321", image: "/images/ranks/promptsmith.png" },
-  { name: "Systems Tuner", minXp: 1150, tagline: "You hear the hum beneath.", color: "#FF8BD1", iconColor: "#171321", image: "/images/ranks/systems-tuner.png" },
-  { name: "Architect", minXp: 1600, tagline: "You design the machine's day.", color: "#FF6B4A", iconColor: "#171321", image: "/images/ranks/architect.png" },
-  { name: "Visionary", minXp: 2150, tagline: "Future-facing, guardrails on.", color: "#7B5CFF", iconColor: "#FFFFFF", image: "/images/ranks/visionary.png" },
-  { name: "Singularity", minXp: 2800, tagline: "Full stack human. Certified.", color: "#171321", iconColor: "#FFD645", image: "/images/ranks/singularity.png" },
+  { name: "Newcomer", minXp: 0, tagline: "Everyone starts somewhere. Glad you're here.", color: "#EEE8FF", iconColor: "#171321", image: "/images/ranks/newcomer.png" },
+  { name: "Explorer", minXp: 150, tagline: "You've started asking how this stuff actually works.", color: "#43D9FF", iconColor: "#171321", image: "/images/ranks/explorer.png" },
+  { name: "Apprentice", minXp: 420, tagline: "Less \"what even is AI?\", more \"oh, I can use this.\"", color: "#C6F32E", iconColor: "#171321", image: "/images/ranks/apprentice.png" },
+  { name: "Practitioner", minXp: 760, tagline: "You're getting real work done with it now.", color: "#FFD645", iconColor: "#171321", image: "/images/ranks/practitioner.png" },
+  { name: "Specialist", minXp: 1150, tagline: "You know where AI shines and where it'll let you down.", color: "#FF8BD1", iconColor: "#171321", image: "/images/ranks/specialist.png" },
+  { name: "Strategist", minXp: 1600, tagline: "You decide where AI belongs, not just how to use it.", color: "#FF6B4A", iconColor: "#171321", image: "/images/ranks/strategist.png" },
+  { name: "Expert", minXp: 2150, tagline: "The person people turn to when AI gets confusing.", color: "#7B5CFF", iconColor: "#FFFFFF", image: "/images/ranks/expert.png" },
+  { name: "Master", minXp: 2800, tagline: "You use it well, question it often, and keep people first.", color: "#171321", iconColor: "#FFD645", image: "/images/ranks/master.png" },
 ];
 
 export function rankFor(xp: number): Rank {
@@ -70,15 +70,15 @@ export type Badge = {
 };
 
 export const BADGES: Badge[] = [
-  { id: "first-contact", name: "First Contact", flavor: "Boot sequence complete.", how: "Finish your very first lesson.", color: "#7B5CFF" },
-  { id: "flawless", name: "No Notes", flavor: "Aced a checkpoint, first try.", how: "Get every checkpoint question right with zero misses.", color: "#43D9FF" },
-  { id: "hot-streak", name: "Overclocked", flavor: "5-arrow combo in a boss fight.", how: "Answer 5 boss questions correctly in a row.", color: "#FF6B4A" },
-  { id: "promptsmith", name: "Certified Promptsmith", flavor: "90+ signal in the Prompt Forge.", how: "Build a prompt that scores 90 or higher.", color: "#C6F32E" },
-  { id: "hallucination-hunter", name: "Hallucination Hunter", flavor: "Caught every fabricated fact. Zero false alarms.", how: "Flag all five fakes in the Source Check lab — without flagging a real one.", color: "#FFD645" },
-  { id: "data-whisperer", name: "Data Whisperer", flavor: "Inside the Machine: cleared.", how: "Complete every mission in Module 01.", color: "#7B5CFF" },
-  { id: "kit-master", name: "Loaded Toolkit", flavor: "The Toolkit: cleared.", how: "Complete every mission in Module 02.", color: "#43D9FF" },
-  { id: "team-human", name: "Team Human", flavor: "Human in the Loop: cleared.", how: "Complete every mission in Module 03.", color: "#FF6B4A" },
-  { id: "triple-threat", name: "Full Network", flavor: "Every neuron lit. All of it.", how: "Complete all three modules.", color: "#FF8BD1" },
+  { id: "first-contact", name: "First Steps", flavor: "Lesson one, done. The hardest part is behind you.", how: "Finish your very first lesson.", color: "#7B5CFF" },
+  { id: "flawless", name: "Nailed It", flavor: "Not a single miss. A little smugness is allowed.", how: "Get every checkpoint question right with zero misses.", color: "#43D9FF" },
+  { id: "hot-streak", name: "On a Roll", flavor: "Five boss answers in a row, and you didn't even flinch.", how: "Answer 5 boss questions correctly in a row.", color: "#FF6B4A" },
+  { id: "promptsmith", name: "Prompt Pro", flavor: "Clear ask, great answer. The Forge approved.", how: "Build a prompt that scores 90 or higher.", color: "#C6F32E" },
+  { id: "hallucination-hunter", name: "Hallucination Hunter", flavor: "You spotted every made-up fact and never cried wolf.", how: "Flag all five fakes in the Source Check lab without flagging a real one.", color: "#FFD645" },
+  { id: "data-whisperer", name: "Under the Hood", flavor: "You've seen how the machine actually thinks. Mostly.", how: "Complete every mission in Module 01.", color: "#7B5CFF" },
+  { id: "kit-master", name: "Toolbox Ready", flavor: "You know which tool to grab, and when to put it down.", how: "Complete every mission in Module 02.", color: "#43D9FF" },
+  { id: "team-human", name: "Good Judgment", flavor: "AI drafts, you decide. You know where the line is.", how: "Complete every mission in Module 03.", color: "#FF6B4A" },
+  { id: "triple-threat", name: "Graduate", flavor: "All three modules done. You've earned the bragging rights.", how: "Complete all three modules.", color: "#FF8BD1" },
 ];
 
 export const badgeById = (id: string) => BADGES.find((b) => b.id === id);

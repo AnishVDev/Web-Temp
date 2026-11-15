@@ -197,7 +197,7 @@ export default function CheckpointQuiz({ lesson }: { lesson: Lesson }) {
 
         {banked && (
           <p className="mt-4 font-mono text-xs uppercase tracking-wider text-lime">
-            ✓ Logged to your neural build — scroll down to continue
+            ✓ Logged to your neural build, scroll down to continue
           </p>
         )}
       </motion.div>
@@ -309,7 +309,7 @@ export default function CheckpointQuiz({ lesson }: { lesson: Lesson }) {
                 >
                   <p className="flex-1 text-sm leading-relaxed text-ink/85">
                     <span className="font-mono text-[11px] font-bold uppercase tracking-wider">
-                      {answeredRight ? "Correct — " : "Not quite — "}
+                      {answeredRight ? "Correct - " : "Not quite - "}
                     </span>
                     {q.explain}
                   </p>

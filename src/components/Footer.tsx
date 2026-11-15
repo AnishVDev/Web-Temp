@@ -70,7 +70,7 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-ink/15 py-4 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-ink/45">
-        NEURO//HIGH — Learn how AI works. Decide how to use it.
+        NEURO//HIGH - Learn how AI works. Decide how to use it.
       </div>
     </footer>
   );

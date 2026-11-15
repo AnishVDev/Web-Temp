@@ -117,7 +117,7 @@ export default function LessonShell({ lesson, mod }: { lesson: Lesson; mod: Modu
         </p>
         <CheckpointQuiz lesson={lesson} />
         <p className="mt-3 text-center text-xs text-ink/55">
-          Wrong answers cost nothing and reset your combo. Correct answers must all land to clear — retries are free, that&apos;s training.
+          Wrong answers cost nothing and reset your combo. Correct answers must all land to clear, retries are free, that&apos;s training.
         </p>
       </section>
 

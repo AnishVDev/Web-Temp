@@ -148,7 +148,7 @@ export default function Header() {
               ))}
               {state && (
                 <div className="mt-1 flex items-center gap-2 px-3 py-2 font-mono text-xs uppercase tracking-wider text-ink/60">
-                  <Zap className="size-4 text-vio" /> {xp} XP — Rank: {rank.name}
+                  <Zap className="size-4 text-vio" /> {xp} XP - Rank: {rank.name}
                 </div>
               )}
             </div>

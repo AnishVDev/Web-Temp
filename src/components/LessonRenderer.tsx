@@ -128,7 +128,7 @@ export default function LessonRenderer({ lesson }: { lesson: Lesson }) {
                         <Icon className="size-3.5" style={{ color }} strokeWidth={2.8} />
                       </span>
                       <span className="text-[14.5px] leading-relaxed text-ink/85">
-                        {item.title && <strong className="mr-1.5 font-bold text-ink">{item.title} —</strong>}
+                        {item.title && <strong className="mr-1.5 font-bold text-ink">{item.title} -</strong>}
                         {item.text}
                       </span>
                     </li>
@@ -241,7 +241,7 @@ export default function LessonRenderer({ lesson }: { lesson: Lesson }) {
                 className="sticker bg-white p-5"
               >
                 <p className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.25em] text-ink/50">
-                  <Info className="size-4" /> Vocab drop — hover any term
+                  <Info className="size-4" /> Vocab drop: hover any term
                 </p>
                 <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3 text-[15px] leading-relaxed text-ink/85">
                   {block.terms.map((t, j) => (
@@ -287,7 +287,7 @@ export default function LessonRenderer({ lesson }: { lesson: Lesson }) {
               >
                 <span className="absolute inset-y-0 left-0 w-1.5 rounded-full bg-gradient-to-b from-vio via-blush to-sun" />
                 <p className="font-display text-xl font-bold italic leading-snug text-ink sm:text-2xl">“{block.text}”</p>
-                {block.cite && <cite className="mt-2 block font-mono text-xs not-italic uppercase tracking-wider text-ink/50">— {block.cite}</cite>}
+                {block.cite && <cite className="mt-2 block font-mono text-xs not-italic uppercase tracking-wider text-ink/50">- {block.cite}</cite>}
               </motion.blockquote>
             );
 

@@ -28,7 +28,7 @@ export function XpBar({ tall = false }: { tall?: boolean }) {
               <span className="font-bold text-ink">{xp.toLocaleString()}</span> / {next.minXp.toLocaleString()} XP
             </>
           ) : (
-            <span className="font-bold text-ink">{xp.toLocaleString()} XP — MAX RANK</span>
+            <span className="font-bold text-ink">{xp.toLocaleString()} XP - MAX RANK</span>
           )}
         </p>
       </div>

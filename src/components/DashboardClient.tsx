@@ -119,7 +119,7 @@ export default function DashboardClient() {
       <div className="mt-14 border-t-2 border-dashed border-ink/25 pt-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="font-mono text-[11px] uppercase tracking-wider text-ink/45">
-            Danger zone — wipe your build and start fresh
+            Danger zone - wipe your build and start fresh
           </p>
           {!confirmReset ? (
             <button onClick={() => setConfirmReset(true)} className="btn btn-ghost !py-2 !text-[10px] text-ink/60">

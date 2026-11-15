@@ -175,7 +175,7 @@ export function LeaderboardPreview() {
 
         <div className="shrink-0 text-right">
           <p className="font-display text-3xl font-extrabold leading-none text-ink">
-            {ready && you ? `#${you.position}` : "—"}
+            {ready && you ? `#${you.position}` : "-"}
           </p>
           <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-wider text-ink/50">
             {ready && you ? `Top ${topPercent(you.position)}%` : "Loading"}
@@ -261,7 +261,7 @@ export function LeaderboardFull() {
             Your position <Users className="-my-0.5 size-9 shrink-0 text-vio" aria-hidden="true" />
           </p>
           <p className="font-display text-4xl font-extrabold text-ink">
-            {ready && you ? `#${you.position}` : "—"}
+            {ready && you ? `#${you.position}` : "-"}
             <span className="text-lg text-ink/30"> / {LEADERBOARD_SIZE}</span>
           </p>
         </div>
@@ -271,7 +271,7 @@ export function LeaderboardFull() {
             Percentile <TrendingUp className="-my-0.5 size-9 shrink-0 text-aqua-deep" aria-hidden="true" />
           </p>
           <p className="font-display text-4xl font-extrabold text-ink">
-            {ready && you ? `Top ${topPercent(you.position)}%` : "—"}
+            {ready && you ? `Top ${topPercent(you.position)}%` : "-"}
           </p>
         </div>
 
@@ -288,7 +288,7 @@ export function LeaderboardFull() {
               </div>
             </div>
           ) : (
-            <p className="font-display text-4xl font-extrabold text-ink">—</p>
+            <p className="font-display text-4xl font-extrabold text-ink">-</p>
           )}
         </div>
 
@@ -305,7 +305,7 @@ export function LeaderboardFull() {
             </>
           ) : (
             <p className="font-display text-2xl font-extrabold text-ink">
-              {ready ? "You're #1" : "—"}
+              {ready ? "You're #1" : "-"}
             </p>
           )}
         </div>

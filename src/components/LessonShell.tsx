@@ -30,7 +30,7 @@ export default function LessonShell({ lesson, mod }: { lesson: Lesson; mod: Modu
           href={`/learn/${mod.slug}`}
           className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-ink/60 hover:text-ink"
         >
-          <ChevronLeft className="size-4" /> {mod.codename} — {mod.title}
+          <ChevronLeft className="size-4" /> {mod.codename} - {mod.title}
         </Link>
         <div className="flex items-center gap-1.5" aria-label={`Lesson ${lesson.index + 1} of ${moduleLessons.length}`}>
           {moduleLessons.map((l) => (
@@ -100,7 +100,7 @@ export default function LessonShell({ lesson, mod }: { lesson: Lesson; mod: Modu
               <p className="font-mono text-[11px] font-bold uppercase tracking-[0.22em]">Lab: The Integrity Court</p>
             </div>
             <p className="border-b-2 border-ink bg-paper px-4 py-3 text-sm leading-relaxed text-ink/75">
-              Four real-feeling situations, two moves each. There&apos;s no teacher watching — the only judge here is
+              Four real-feeling situations, two moves each. There&apos;s no teacher watching, the only judge here is
               future-you. Choose well.
             </p>
             <div className="p-3 sm:p-4">
